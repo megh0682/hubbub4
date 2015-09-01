@@ -148,24 +148,30 @@ public class HubbubDAO {
     }
     
     public int register(RegistrationBean bean) {
-        String sql = "INSERT INTO USERS (username,password,firstname,lastname,email,zip)";
-        sql += " VALUES (?,?,?,?,?,?)";
+        String sql1 = "INSERT INTO USERS (username,password)";
+        String sql2 = "INSERT INTO PROFILE (firstname,lastname,email,zip,userid)";
+        sql1 += " VALUES (?,?)";
+        sql2 += " VALUES (?,?,?,?,?)";
         PreparedStatement pstat = null;
         ResultSet rs = null;
         int id = 0;
         try {
-            pstat = CONN.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            pstat = CONN.prepareStatement(sql1, Statement.RETURN_GENERATED_KEYS);
             pstat.setString(1, bean.getUserName());
             pstat.setString(2, bean.getPassword1());
-            pstat.setString(3, bean.getFirstName());
-            pstat.setString(4, bean.getLastName());
-            pstat.setString(5, bean.getEmail());
-            pstat.setString(6, bean.getZipCode());
             pstat.executeUpdate();
             rs = pstat.getGeneratedKeys();
-            if (rs.next())
-                id = rs.getInt(1);
+            if (rs.next()){
+            id = rs.getInt(1);
+            pstat = CONN.prepareStatement(sql2, Statement.RETURN_GENERATED_KEYS);
+            pstat.setString(1, bean.getFirstName());
+            pstat.setString(2, bean.getLastName());
+            pstat.setString(3, bean.getEmail());
+            pstat.setString(4, bean.getZipCode());
+            pstat.setInt(5, id);
+            pstat.executeUpdate();
             lastError = null;
+            }
         } catch (SQLException sqle) {
             lastError = sqle.getMessage();
         } finally {
@@ -180,6 +186,8 @@ public class HubbubDAO {
         }
         return id;
     }
+    
+    
 
     public void close() {
         if(CONN != null)
